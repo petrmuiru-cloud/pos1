@@ -1,105 +1,102 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-  <script>
-  const user = sessionStorage.getItem("userType");
-  if (!user) {
-    window.location.href = "login.html";
-  }
-</script>
-
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
   <title>Samson POS - Sales</title>
   <style>
-    * {
-      box-sizing: border-box;
-    }
-
+    * { box-sizing: border-box; }
     body {
       margin: 0;
       font-family: 'Segoe UI', sans-serif;
-      background: #f5f7fa;
+      background: #f0f2f5;
     }
-
     header {
-      background: #2d3436;
+      background: #222f3e;
       color: white;
-      padding: 20px;
+      padding: 1rem;
       text-align: center;
     }
-
+    nav {
+      background: #c8d6e5;
+      padding: 10px;
+      text-align: right;
+    }
+    nav a {
+      margin-left: 12px;
+      text-decoration: none;
+      color: #222f3e;
+      font-weight: bold;
+    }
     .container {
       display: flex;
       flex-wrap: wrap;
-      padding: 20px;
+      padding: 1rem;
       gap: 20px;
     }
-
     .card {
       background: white;
       padding: 20px;
       border-radius: 12px;
-      box-shadow: 0 4px 12px rgba(0,0,0,0.08);
+      box-shadow: 0 4px 10px rgba(0,0,0,0.05);
       flex: 1;
       min-width: 320px;
     }
-
     input, select, button {
       width: 100%;
       padding: 10px;
-      margin: 8px 0;
-      font-size: 1em;
+      margin: 10px 0;
+      font-size: 1rem;
       border: 1px solid #ccc;
       border-radius: 8px;
     }
-
     button {
       background-color: #0984e3;
       color: white;
       font-weight: bold;
       border: none;
     }
-
     button:hover {
       background-color: #74b9ff;
       cursor: pointer;
     }
-
     table {
       width: 100%;
       border-collapse: collapse;
       margin-top: 15px;
     }
-
     table th, table td {
       text-align: left;
-      padding: 10px;
+      padding: 8px;
       border-bottom: 1px solid #eee;
     }
-
     .receipt {
       font-family: monospace;
-      background: #f1f1f1;
+      background: #f1f2f6;
       padding: 10px;
-      margin-top: 10px;
+      margin-top: 15px;
       border-left: 4px solid #0984e3;
       display: none;
+      white-space: pre-wrap;
     }
-
-    .nav-bar {
-      background: #dfe6e9;
-      padding: 10px;
-      text-align: right;
-    }
-
-    .nav-bar a {
-      margin-left: 10px;
-      color: #2d3436;
-      text-decoration: none;
-      font-weight: bold;
+    @media (max-width: 600px) {
+      .container {
+        flex-direction: column;
+      }
     }
   </style>
+  <script>
+    // Redirect unauthorized users
+    window.onload = function () {
+      const user = sessionStorage.getItem("userType");
+      if (!user) {
+        window.location.href = "login.html";
+      } else if (user === "staff") {
+        // Staff only sees index
+        document.getElementById("adminLinks")?.remove();
+      }
+    };
+  </script>
 </head>
 <body>
 
@@ -108,12 +105,15 @@
     <p>Sales Dashboard</p>
   </header>
 
-  <div class="nav-bar">
+  <nav>
+    <span id="adminLinks">
+      <a href="products.html">Products</a>
+      <a href="reports.html">Reports</a>
+    </span>
     <a href="#" onclick="logout()">Logout</a>
-  </div>
+  </nav>
 
   <div class="container">
-
     <div class="card">
       <h3>New Sale</h3>
       <input type="text" id="search" placeholder="Search Product..." oninput="filterProducts()">
@@ -139,91 +139,88 @@
         <tbody id="salesTable"></tbody>
       </table>
     </div>
-
   </div>
 
   <script>
-    // Demo product data
     const productList = [
       { name: "Extension Cable", price: 500 },
       { name: "TV Remote", price: 300 },
       { name: "Bulb 60W", price: 100 },
-      { name: "Plug Adapter", price: 150 },
+      { name: "Plug Adapter", price: 150 }
     ];
 
-    const productDropdown = document.getElementById("product");
-    const searchBox = document.getElementById("search");
-
     function loadProducts() {
-      productDropdown.innerHTML = '';
-      productList.forEach((p) => {
+      const dropdown = document.getElementById("product");
+      dropdown.innerHTML = "";
+      productList.forEach(p => {
         const option = document.createElement("option");
         option.value = p.name;
         option.textContent = `${p.name} - Ksh ${p.price}`;
-        productDropdown.appendChild(option);
+        dropdown.appendChild(option);
       });
     }
 
     function filterProducts() {
-      const term = searchBox.value.toLowerCase();
-      productDropdown.innerHTML = '';
+      const term = document.getElementById("search").value.toLowerCase();
+      const dropdown = document.getElementById("product");
+      dropdown.innerHTML = "";
       productList
         .filter(p => p.name.toLowerCase().includes(term))
         .forEach(p => {
           const option = document.createElement("option");
           option.value = p.name;
           option.textContent = `${p.name} - Ksh ${p.price}`;
-          productDropdown.appendChild(option);
+          dropdown.appendChild(option);
         });
     }
 
     function submitSale() {
-      const product = productDropdown.value;
+      const product = document.getElementById("product").value;
       const qty = parseInt(document.getElementById("quantity").value);
       const unit = parseFloat(document.getElementById("price").value);
-
       if (!product || !qty || !unit) {
-        alert("Please complete all fields.");
+        alert("Fill in all sale fields.");
         return;
       }
-
       const total = qty * unit;
       const date = new Date().toLocaleString();
-      const sale = { product, qty, unit, total, date };
+      const record = { product, qty, unit, total, date };
 
-      const records = JSON.parse(localStorage.getItem("sales") || "[]");
-      records.push(sale);
-      localStorage.setItem("sales", JSON.stringify(records));
+      const all = JSON.parse(localStorage.getItem("sales") || "[]");
+      all.push(record);
+      localStorage.setItem("sales", JSON.stringify(all));
 
       renderSales();
-      showReceipt(sale);
+      showReceipt(record);
     }
 
     function renderSales() {
-      const sales = JSON.parse(localStorage.getItem("sales") || "[]");
+      const all = JSON.parse(localStorage.getItem("sales") || "[]");
       const table = document.getElementById("salesTable");
       table.innerHTML = "";
-      sales.slice().reverse().forEach(sale => {
-        table.innerHTML += `<tr>
-          <td>${sale.date}</td>
-          <td>${sale.product}</td>
-          <td>${sale.qty}</td>
-          <td>Ksh ${sale.unit}</td>
-          <td>Ksh ${sale.total}</td>
+      all.slice().reverse().forEach(s => {
+        const row = `<tr>
+          <td>${s.date}</td>
+          <td>${s.product}</td>
+          <td>${s.qty}</td>
+          <td>Ksh ${s.unit}</td>
+          <td>Ksh ${s.total}</td>
         </tr>`;
+        table.innerHTML += row;
       });
     }
 
-    function showReceipt(sale) {
-      const receipt = document.getElementById("receipt");
-      receipt.style.display = "block";
-      receipt.textContent = `
---- RECEIPT ---
-Product : ${sale.product}
-Qty     : ${sale.qty}
-Unit    : Ksh ${sale.unit}
-Total   : Ksh ${sale.total}
-Date    : ${sale.date}
+    function showReceipt(s) {
+      const box = document.getElementById("receipt");
+      box.style.display = "block";
+      box.textContent = `
+======== RECEIPT ========
+Product : ${s.product}
+Qty     : ${s.qty}
+Unit    : Ksh ${s.unit}
+Total   : Ksh ${s.total}
+Date    : ${s.date}
+=========================
 Thank you for shopping!
       `.trim();
       setTimeout(() => window.print(), 800);
@@ -238,5 +235,6 @@ Thank you for shopping!
     loadProducts();
     renderSales();
   </script>
+
 </body>
 </html>
