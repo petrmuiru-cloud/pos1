@@ -1,0 +1,33 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <title>Sales Page</title>
+</head>
+<body>
+  <h2>Sales Page</h2>
+  <a href="index.html">Home</a> | <a href="products.html">Products</a>
+
+  <form onsubmit="addSale(); return false;">
+    <label>Product:</label><br>
+    <input type="text" id="product"><br><br>
+    <label>Quantity:</label><br>
+    <input type="number" id="qty"><br><br>
+    <button type="submit">Submit Sale</button>
+  </form>
+
+  <h3>Sales Log</h3>
+  <ul id="log"></ul>
+
+  <script>
+    function addSale() {
+      const product = document.getElementById("product").value;
+      const qty = document.getElementById("qty").value;
+      const list = document.getElementById("log");
+      const now = new Date().toLocaleString();
+      const entry = document.createElement("li");
+      entry.innerText = `${now} - ${product} x ${qty}`;
+      list.appendChild(entry);
+    }
+  </script>
+</body>
+</html>
