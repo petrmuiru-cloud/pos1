@@ -3,95 +3,233 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
-  <title>Login | Samson Electricals POS</title>
+  <title>Samson POS - Sales</title>
   <style>
-    body {
-      margin: 0;
-      font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
-      background: linear-gradient(to right, #0f2027, #203a43, #2c5364);
-      display: flex;
-      justify-content: center;
-      align-items: center;
-      height: 100vh;
-      color: #fff;
+    * {
+      box-sizing: border-box;
     }
 
-    .login-container {
-      background: #ffffff10;
-      backdrop-filter: blur(10px);
-      padding: 40px 30px;
-      border-radius: 12px;
-      box-shadow: 0 8px 20px rgba(0,0,0,0.2);
-      width: 300px;
+    body {
+      margin: 0;
+      font-family: 'Segoe UI', sans-serif;
+      background: #f5f7fa;
+    }
+
+    header {
+      background: #2d3436;
+      color: white;
+      padding: 20px;
       text-align: center;
     }
 
-    .login-container h2 {
-      margin-bottom: 20px;
-      font-size: 1.8em;
-      color: #ffffff;
+    .container {
+      display: flex;
+      flex-wrap: wrap;
+      padding: 20px;
+      gap: 20px;
     }
 
-    .login-container input {
+    .card {
+      background: white;
+      padding: 20px;
+      border-radius: 12px;
+      box-shadow: 0 4px 12px rgba(0,0,0,0.08);
+      flex: 1;
+      min-width: 320px;
+    }
+
+    input, select, button {
       width: 100%;
-      padding: 12px;
-      margin: 10px 0;
-      border: none;
-      border-radius: 6px;
+      padding: 10px;
+      margin: 8px 0;
       font-size: 1em;
+      border: 1px solid #ccc;
+      border-radius: 8px;
     }
 
-    .login-container button {
-      width: 100%;
-      padding: 12px;
-      margin-top: 15px;
-      border: none;
-      border-radius: 6px;
-      background-color: #00b894;
+    button {
+      background-color: #0984e3;
       color: white;
-      font-size: 1em;
+      font-weight: bold;
+      border: none;
+    }
+
+    button:hover {
+      background-color: #74b9ff;
       cursor: pointer;
-      transition: 0.3s;
     }
 
-    .login-container button:hover {
-      background-color: #019875;
+    table {
+      width: 100%;
+      border-collapse: collapse;
+      margin-top: 15px;
     }
 
-    .note {
-      font-size: 0.8em;
-      color: #ddd;
+    table th, table td {
+      text-align: left;
+      padding: 10px;
+      border-bottom: 1px solid #eee;
+    }
+
+    .receipt {
+      font-family: monospace;
+      background: #f1f1f1;
+      padding: 10px;
       margin-top: 10px;
+      border-left: 4px solid #0984e3;
+      display: none;
+    }
+
+    .nav-bar {
+      background: #dfe6e9;
+      padding: 10px;
+      text-align: right;
+    }
+
+    .nav-bar a {
+      margin-left: 10px;
+      color: #2d3436;
+      text-decoration: none;
+      font-weight: bold;
     }
   </style>
 </head>
 <body>
-  <div class="login-container">
-    <h2>Samson POS Login</h2>
-    <form onsubmit="return validateLogin();">
-      <input type="text" id="username" placeholder="Username" required />
-      <input type="password" id="password" placeholder="Password" required />
-      <button type="submit">Log In</button>
-      <div class="note">Try: admin / admin123</div>
-    </form>
+
+  <header>
+    <h2>Samson POS System</h2>
+    <p>Sales Dashboard</p>
+  </header>
+
+  <div class="nav-bar">
+    <a href="#" onclick="logout()">Logout</a>
+  </div>
+
+  <div class="container">
+
+    <div class="card">
+      <h3>New Sale</h3>
+      <input type="text" id="search" placeholder="Search Product..." oninput="filterProducts()">
+      <select id="product"></select>
+      <input type="number" id="quantity" placeholder="Quantity" min="1" />
+      <input type="number" id="price" placeholder="Unit Price" />
+      <button onclick="submitSale()">Submit Sale</button>
+      <div class="receipt" id="receipt"></div>
+    </div>
+
+    <div class="card">
+      <h3>Sales Records</h3>
+      <table>
+        <thead>
+          <tr>
+            <th>Date</th>
+            <th>Product</th>
+            <th>Qty</th>
+            <th>Unit</th>
+            <th>Total</th>
+          </tr>
+        </thead>
+        <tbody id="salesTable"></tbody>
+      </table>
+    </div>
+
   </div>
 
   <script>
-    function validateLogin() {
-      const uname = document.getElementById("username").value.trim();
-      const pword = document.getElementById("password").value.trim();
+    // Demo product data
+    const productList = [
+      { name: "Extension Cable", price: 500 },
+      { name: "TV Remote", price: 300 },
+      { name: "Bulb 60W", price: 100 },
+      { name: "Plug Adapter", price: 150 },
+    ];
 
-      if ((uname === "admin" && pword === "admin123") ||
-          (uname === "staff" && pword === "staff123")) {
-        alert("Login successful!");
-        sessionStorage.setItem("loggedIn", "true");
-        window.location.href = "sales.html";
-        return false;
-      } else {
-        alert("Invalid credentials. Try again.");
-        return false;
-      }
+    const productDropdown = document.getElementById("product");
+    const searchBox = document.getElementById("search");
+
+    function loadProducts() {
+      productDropdown.innerHTML = '';
+      productList.forEach((p) => {
+        const option = document.createElement("option");
+        option.value = p.name;
+        option.textContent = `${p.name} - Ksh ${p.price}`;
+        productDropdown.appendChild(option);
+      });
     }
+
+    function filterProducts() {
+      const term = searchBox.value.toLowerCase();
+      productDropdown.innerHTML = '';
+      productList
+        .filter(p => p.name.toLowerCase().includes(term))
+        .forEach(p => {
+          const option = document.createElement("option");
+          option.value = p.name;
+          option.textContent = `${p.name} - Ksh ${p.price}`;
+          productDropdown.appendChild(option);
+        });
+    }
+
+    function submitSale() {
+      const product = productDropdown.value;
+      const qty = parseInt(document.getElementById("quantity").value);
+      const unit = parseFloat(document.getElementById("price").value);
+
+      if (!product || !qty || !unit) {
+        alert("Please complete all fields.");
+        return;
+      }
+
+      const total = qty * unit;
+      const date = new Date().toLocaleString();
+      const sale = { product, qty, unit, total, date };
+
+      const records = JSON.parse(localStorage.getItem("sales") || "[]");
+      records.push(sale);
+      localStorage.setItem("sales", JSON.stringify(records));
+
+      renderSales();
+      showReceipt(sale);
+    }
+
+    function renderSales() {
+      const sales = JSON.parse(localStorage.getItem("sales") || "[]");
+      const table = document.getElementById("salesTable");
+      table.innerHTML = "";
+      sales.slice().reverse().forEach(sale => {
+        table.innerHTML += `<tr>
+          <td>${sale.date}</td>
+          <td>${sale.product}</td>
+          <td>${sale.qty}</td>
+          <td>Ksh ${sale.unit}</td>
+          <td>Ksh ${sale.total}</td>
+        </tr>`;
+      });
+    }
+
+    function showReceipt(sale) {
+      const receipt = document.getElementById("receipt");
+      receipt.style.display = "block";
+      receipt.textContent = `
+--- RECEIPT ---
+Product : ${sale.product}
+Qty     : ${sale.qty}
+Unit    : Ksh ${sale.unit}
+Total   : Ksh ${sale.total}
+Date    : ${sale.date}
+Thank you for shopping!
+      `.trim();
+      setTimeout(() => window.print(), 800);
+    }
+
+    function logout() {
+      sessionStorage.clear();
+      window.location.href = "login.html";
+    }
+
+    // Init
+    loadProducts();
+    renderSales();
   </script>
 </body>
 </html>
