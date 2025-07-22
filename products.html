@@ -1,33 +1,43 @@
 <!DOCTYPE html>
 <html>
 <head>
-  <title>Product List</title>
+  <title>Products - POS</title>
+  <style>
+    body { font-family: Arial; padding: 20px; background: #f9f9f9; }
+    table { width: 100%; border-collapse: collapse; background: white; box-shadow: 0 0 5px #ccc; }
+    th, td { padding: 10px; border: 1px solid #ccc; text-align: left; }
+    h2 { text-align: center; }
+  </style>
 </head>
 <body>
-  <h2>Products</h2>
-  <a href="index.html">Home</a> | <a href="sales.html">Sales</a>
-
-  <table border="1">
-    <tr>
-      <th>Product</th>
-      <th>Price (KES)</th>
-      <th>Stock</th>
-    </tr>
-    <tr>
-      <td>Extension Cord</td>
-      <td>500</td>
-      <td>20</td>
-    </tr>
-    <tr>
-      <td>TV Remote</td>
-      <td>300</td>
-      <td>15</td>
-    </tr>
-    <tr>
-      <td>Wall Bracket</td>
-      <td>1000</td>
-      <td>10</td>
-    </tr>
+  <h2>Available Products</h2>
+  <table>
+    <thead>
+      <tr>
+        <th>Product</th>
+        <th>Price (KES)</th>
+        <th>Stock</th>
+      </tr>
+    </thead>
+    <tbody id="productList"></tbody>
   </table>
+
+  <script>
+    const products = [
+      { name: "Extension Cord", price: 500, stock: 20 },
+      { name: "TV Remote", price: 300, stock: 15 },
+      { name: "Wall Bracket", price: 1000, stock: 10 },
+    ];
+
+    const list = document.getElementById("productList");
+    products.forEach(p => {
+      const row = `<tr>
+        <td>${p.name}</td>
+        <td>KES ${p.price}</td>
+        <td>${p.stock}</td>
+      </tr>`;
+      list.innerHTML += row;
+    });
+  </script>
 </body>
 </html>
