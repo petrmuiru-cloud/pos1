@@ -1,33 +1,214 @@
 <!DOCTYPE html>
-<html>
+<html lang="en">
 <head>
-  <title>Sales Page</title>
+  <meta charset="UTF-8">
+  <title>Sales | Samson POS</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <style>
+    body {
+      margin: 0;
+      font-family: 'Segoe UI', sans-serif;
+      background: #f1f1f1;
+      padding: 20px;
+    }
+
+    header {
+      text-align: center;
+      margin-bottom: 20px;
+    }
+
+    .container {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 20px;
+    }
+
+    .left, .right {
+      flex: 1;
+      min-width: 300px;
+      background: #fff;
+      padding: 20px;
+      border-radius: 10px;
+      box-shadow: 0 0 10px rgba(0,0,0,0.1);
+    }
+
+    input, select, button {
+      width: 100%;
+      padding: 10px;
+      margin: 8px 0;
+      font-size: 1em;
+      border: 1px solid #ccc;
+      border-radius: 6px;
+    }
+
+    table {
+      width: 100%;
+      border-collapse: collapse;
+      margin-top: 10px;
+    }
+
+    table th, table td {
+      padding: 8px;
+      border-bottom: 1px solid #ddd;
+    }
+
+    button {
+      background-color: #0984e3;
+      color: white;
+      cursor: pointer;
+    }
+
+    button:hover {
+      background-color: #0652dd;
+    }
+
+    .receipt {
+      background: #f9f9f9;
+      padding: 10px;
+      margin-top: 10px;
+      border: 1px dashed #999;
+      font-family: monospace;
+      white-space: pre;
+    }
+  </style>
 </head>
 <body>
-  <h2>Sales Page</h2>
-  <a href="index.html">Home</a> | <a href="products.html">Products</a>
 
-  <form onsubmit="addSale(); return false;">
-    <label>Product:</label><br>
-    <input type="text" id="product"><br><br>
-    <label>Quantity:</label><br>
-    <input type="number" id="qty"><br><br>
-    <button type="submit">Submit Sale</button>
-  </form>
+  <header>
+    <h2>Samson POS - Sales</h2>
+  </header>
 
-  <h3>Sales Log</h3>
-  <ul id="log"></ul>
+  <div class="container">
+
+    <!-- Sales Entry Section -->
+    <div class="left">
+      <h3>New Sale</h3>
+      <input type="text" id="search" placeholder="Search Product..." oninput="filterProducts()">
+      <select id="product">
+        <!-- Loaded dynamically -->
+      </select>
+      <input type="number" id="quantity" placeholder="Quantity" min="1" />
+      <input type="number" id="price" placeholder="Unit Price" />
+      <button onclick="submitSale()">Submit Sale</button>
+
+      <div id="receipt" class="receipt" style="display: none;"></div>
+    </div>
+
+    <!-- Sales History Section -->
+    <div class="right">
+      <h3>Sales Records</h3>
+      <table id="salesTable">
+        <thead>
+          <tr>
+            <th>Date</th>
+            <th>Product</th>
+            <th>Qty</th>
+            <th>Unit</th>
+            <th>Total</th>
+          </tr>
+        </thead>
+        <tbody>
+          <!-- Filled dynamically -->
+        </tbody>
+      </table>
+    </div>
+  </div>
 
   <script>
-    function addSale() {
-      const product = document.getElementById("product").value;
-      const qty = document.getElementById("qty").value;
-      const list = document.getElementById("log");
-      const now = new Date().toLocaleString();
-      const entry = document.createElement("li");
-      entry.innerText = `${now} - ${product} x ${qty}`;
-      list.appendChild(entry);
+    const productList = [
+      { name: "Extension Cable", price: 500 },
+      { name: "TV Remote", price: 300 },
+      { name: "Bulb 60W", price: 100 },
+      { name: "Plug Adapter", price: 150 },
+    ];
+
+    const productDropdown = document.getElementById("product");
+    const searchBox = document.getElementById("search");
+
+    function loadProducts() {
+      productDropdown.innerHTML = '';
+      productList.forEach((p, i) => {
+        let option = document.createElement("option");
+        option.value = p.name;
+        option.textContent = `${p.name} - Ksh ${p.price}`;
+        productDropdown.appendChild(option);
+      });
     }
+
+    function filterProducts() {
+      const search = searchBox.value.toLowerCase();
+      productDropdown.innerHTML = '';
+      productList
+        .filter(p => p.name.toLowerCase().includes(search))
+        .forEach(p => {
+          let option = document.createElement("option");
+          option.value = p.name;
+          option.textContent = `${p.name} - Ksh ${p.price}`;
+          productDropdown.appendChild(option);
+        });
+    }
+
+    function submitSale() {
+      const product = productDropdown.value;
+      const qty = parseInt(document.getElementById("quantity").value);
+      const unit = parseFloat(document.getElementById("price").value);
+
+      if (!product || !qty || !unit) {
+        alert("Please fill all fields.");
+        return;
+      }
+
+      const total = qty * unit;
+      const date = new Date().toLocaleDateString();
+      const newSale = { date, product, qty, unit, total };
+
+      // Save to localStorage
+      const records = JSON.parse(localStorage.getItem("sales")) || [];
+      records.push(newSale);
+      localStorage.setItem("sales", JSON.stringify(records));
+
+      renderSales();
+      printReceipt(newSale);
+    }
+
+    function renderSales() {
+      const sales = JSON.parse(localStorage.getItem("sales")) || [];
+      const tbody = document.getElementById("salesTable").querySelector("tbody");
+      tbody.innerHTML = '';
+      sales.forEach(sale => {
+        const row = `<tr>
+          <td>${sale.date}</td>
+          <td>${sale.product}</td>
+          <td>${sale.qty}</td>
+          <td>Ksh ${sale.unit}</td>
+          <td>Ksh ${sale.total}</td>
+        </tr>`;
+        tbody.innerHTML += row;
+      });
+    }
+
+    function printReceipt(sale) {
+      const receipt = `
+--- RECEIPT ---
+Product : ${sale.product}
+Qty     : ${sale.qty}
+Unit    : Ksh ${sale.unit}
+Total   : Ksh ${sale.total}
+Date    : ${sale.date}
+Thank you for shopping!
+----------------
+`;
+      const receiptBox = document.getElementById("receipt");
+      receiptBox.style.display = "block";
+      receiptBox.textContent = receipt;
+
+      setTimeout(() => window.print(), 800);
+    }
+
+    // Initialize
+    loadProducts();
+    renderSales();
   </script>
+
 </body>
 </html>
